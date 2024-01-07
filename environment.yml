@@ -1,0 +1,14 @@
+name: soplot
+channels:
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - ../baseargs
+    - ../logerr
+    - ../matstat
+    - seaborn
+    - pytest
+    - pytest-html
+prefix: ./.convenv
