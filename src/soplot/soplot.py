@@ -1,5 +1,5 @@
 import seaborn.objects as so
-from baseargs import AkwArgs, KwArgs, Args, is_type,is_instance,nested_by, arg_initializer
+from argin import AkwArgs, KwArgs, Args, is_type,is_instance,nested_by, arg_initializer
 from  logerr import conditional_validation,Err
 from matstat import *
 
