@@ -22,7 +22,9 @@ class SoPlot(AkwArgs):
         *args, data=None, x=None, y=None, color=None, alpha=None, fill=None, marker=None,
         pointsize=None, stroke=None, linewidth=None, linestyle=None, fillcolor=None, fillalpha=None,
         edgewidth=None, edgestyle=None, edgecolor=None, edgealpha=None, text=None, halign=None,
-        valign=None, offset=None, fontsize=None, xmin=None, xmax=None, ymin=None, ymax=None, group=None): https://seaborn.pydata.org/generated/seaborn.objects.Plot.html
+        valign=None, offset=None, fontsize=None, xmin=None, xmax=None, ymin=None, ymax=None,
+        group=None)
+        https://seaborn.pydata.org/generated/seaborn.objects.Plot.html
     """
     ...
 
@@ -37,7 +39,9 @@ class SoLayer(AkwArgs):
         SoLayer(so.Bars(), so.Hist(), so.Dodge(), legent = True)
 
         Args:
-            (mark, *transforms, orient=None, legend=True, label=None, data=None, **variables ):  Arguments of seaborn.objects.Plot.add :https://seaborn.pydata.org/generated/seaborn.objects.Plot.add.html#
+            (mark, *transforms, orient=None, legend=True, label=None, data=None, **variables)
+            Arguments of seaborn.objects.Plot.add:
+            https://seaborn.pydata.org/generated/seaborn.objects.Plot.add.html
     """
     ...
 
@@ -150,7 +154,10 @@ class MDF:
         So.Theme(axes_style("whitegrid") | plotting_context("talk"));
 
         Args:
-            (config, /):https://seaborn.pydata.org/generated/seaborn.objects.Plot.theme.html  Matplotlib rc parameters are documented on the following page: https://matplotlib.org/stable/tutorials/introductory/customizing.html
+            (config, /)
+            https://seaborn.pydata.org/generated/seaborn.objects.Plot.theme.html
+            Matplotlib rc parameters:
+            https://matplotlib.org/stable/tutorials/introductory/customizing.html
         """
         ...
 
@@ -222,10 +229,9 @@ class SO:
                 plot = plot.limit(**mdf)
             elif isinstance(mdf, MDF.Share):
                 plot = plot.share(**mdf)
-            elif isinstance(mdf, MDF.Theme):
-                if mdf:  # apply only if not empty
-                    for m in mdf:
-                        plot = plot.theme(m)
+            elif isinstance(mdf, MDF.Theme) and mdf:  # an empty theme sets nothing
+                for m in mdf:
+                    plot = plot.theme(m)
 
         return plot
 
@@ -270,7 +276,9 @@ class SO:
         # inistialize arguments to same length
         kw_args['layers'] = arg_initializer(kw_args['layers'], Args(SoLayer()), features_length)
         kw_args['modifiers'] = arg_initializer(kw_args['modifiers'], Args(), features_length)
-        kw_args['global_modifiers'] = arg_initializer(kw_args['global_modifiers'], KwArgs(), features_length)
+        kw_args['global_modifiers'] = arg_initializer(
+            kw_args['global_modifiers'], KwArgs(), features_length
+        )
         kw_args['plot_vars'] = arg_initializer(kw_args['plot_vars'], KwArgs(), features_length)
         #determine axis
         axis = 'x' if kw_args['base'] == 'x' else 'y'
@@ -284,7 +292,7 @@ class SO:
         #modifies all plots with seaborn.object modifiers
         global_modifiers = kw_args['global_modifiers']
         #make sure subfigures are iterable
-        sub_figures = sub_figures.flatten() if hasattr(sub_figures, 'flatten') else sub_figures if isinstance(sub_figures, np.ndarray) else [sub_figures]
+        sub_figures = _as_sequence(sub_figures)
         for idx_, (feature_, sub_figure_) in enumerate(zip(features, sub_figures)):
             #set axis for each feature plot
             kw_args['plot_param'].kwargs[kw_args['axis']] = variable
@@ -349,9 +357,7 @@ class SO:
         kw_args['modifiers'] = arg_initializer(kw_args['modifiers'], Args(), features_length)
         kw_args['show_hist'] = arg_initializer(kw_args['show_hist'], False, features_length)
 
-        sub_figures = sub_figures.flatten() if hasattr(sub_figures, 'flatten') else sub_figures if isinstance(sub_figures,
-                                                                                                                np.ndarray) else [
-            sub_figures]
+        sub_figures = _as_sequence(sub_figures)
         for idx_, (feature_, sub_figure) in enumerate(zip(features, sub_figures)):
             his_fig = None
             box_fig = None
@@ -370,14 +376,19 @@ class SO:
                     ss_figs = sub_figure.subfigures(2, 1)
                     his_fig = ss_figs[0]  # hist on top
                     box_fig = ss_figs[1]
-                    his_theme = MDF.Theme({'xtick.labelbottom': False, 'ytick.labelleft': False, })  # disable hist yticklabel #disable hist title
+                    # no tick labels on the histogram: the box below carries them
+                    his_theme = MDF.Theme(
+                        {'xtick.labelbottom': False, 'ytick.labelleft': False}
+                    )
 
                 else:
                     ss_figs = sub_figure.subfigures(1, 2)
                     his_fig = ss_figs[1]  # hist on right
                     box_fig = ss_figs[0]
-                    his_theme = MDF.Theme({'xtick.labelbottom': False, 'ytick.labelleft': False, })  # disable hist yticklabel #disable hist title
-                    # box_theme = MDF.Theme({'xtick.labelbottom':False,'ytick.labelleft':False,}) #disable hist yticklabel #disable hist title
+                    # no tick labels on the histogram: the box beside it carries them
+                    his_theme = MDF.Theme(
+                        {'xtick.labelbottom': False, 'ytick.labelleft': False}
+                    )
 
                 his = SO.modify_plot(his, his_theme)  # apply hist theme
                 his = SO.modify_plot(his, *kw_args['modifiers'][idx_])  # overriding modifiers
@@ -491,9 +502,17 @@ class SO:
         plot_param.kwargs[other_axis] = kw_args['dummy_data']
         kw_args['plot_param'] = plot_param
 
-        base_layer = SoLayer(so.Dot(**kw_args['dot_var']), so.Jitter(**kw_args['jitter_var']), **kw_args['datapoint_var'])
+        base_layer = SoLayer(
+            so.Dot(**kw_args['dot_var']),
+            so.Jitter(**kw_args['jitter_var']),
+            **kw_args['datapoint_var'],
+        )
         if kw_args['band_view']:
-            base_layer = SoLayer(so.Dash(**kw_args['dash_var']), so.Dodge(**kw_args['dodge_var']), **kw_args['datapoint_var'])
+            base_layer = SoLayer(
+                so.Dash(**kw_args['dash_var']),
+                so.Dodge(**kw_args['dodge_var']),
+                **kw_args['datapoint_var'],
+            )
 
         sp = so.Plot(*kw_args['plot_param'].args, **kw_args['plot_param'].kwargs) \
             .add(*base_layer.args, **base_layer.kwargs) \
@@ -505,6 +524,19 @@ class SO:
         sp = SO.modify_plot(sp, *kw_args['modifiers'])
 
         return sp
+
+
+def _as_sequence(sub_figures):
+    """Return ``sub_figures`` as something that can be iterated feature by feature.
+
+    ``Figure.subfigures`` hands back an array for a grid and a bare subfigure
+    for a single cell; both have to read the same way here.
+    """
+    if hasattr(sub_figures, 'flatten'):
+        return sub_figures.flatten()
+    if isinstance(sub_figures, np.ndarray):
+        return sub_figures
+    return [sub_figures]
 
 
 def add_barlabel(figure):
@@ -528,11 +560,9 @@ def add_barlabel(figure):
     """
     try:
         axes = figure.figure.axes
-        for i,ax  in enumerate(axes):
-            ax0 = ax
-            ax0_containers = ax0.containers
-            for j , cont in enumerate(ax0_containers):
-                ax0.bar_label(cont)
+        for axis in axes:
+            for container in axis.containers:
+                axis.bar_label(container)
         return figure
     except Exception as exc:
         raise FigureModifyError(
