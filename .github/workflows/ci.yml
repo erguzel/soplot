@@ -39,3 +39,37 @@ jobs:
         run: pytest
         env:
           MPLBACKEND: Agg
+
+  example:
+    name: example on the lowest supported python
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      # the pinned stack is what a reader installs, and this is the only place
+      # a pin that no longer fits the supported pythons shows up: the test job
+      # above installs from pyproject.toml, where nothing is pinned
+      - name: Install the example's pinned stack
+        working-directory: examples/compare-plot
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt
+
+      # the cells are plain python, so running them needs no notebook machinery
+      - name: Run the example's cells
+        working-directory: examples/compare-plot
+        env:
+          MPLBACKEND: Agg
+        run: |
+          python - <<'PY'
+          import json
+
+          notebook = json.load(open('compare-plot.ipynb'))
+          cells = [c for c in notebook['cells'] if c['cell_type'] == 'code']
+          source = '\n'.join(''.join(c['source']) for c in cells)
+          exec(compile(source, 'compare-plot.ipynb', 'exec'), {'__name__': '__main__'})
+          PY
