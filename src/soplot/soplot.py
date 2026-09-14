@@ -219,17 +219,6 @@ class SO:
         return plot
 
     @staticmethod
-    def cross_plot(data,variables, features, sub_figures,**kwargs):     
-        kw_args = KwArgs(layers=Args(Args(SoLayer())), 
-                         modifiers=Args(Args()), 
-                         global_modifiers=Args(KwArgs()), 
-                         base='x',
-                         plot_vars=Args(KwArgs()),
-                        )
-        kw_args = kw_args | kwargs
-        kw_args = KwArgs(**kw_args) 
-
-    @staticmethod
     def compare_plot(data, variable, features, sub_figures, **kwargs):
         """_summary_
 
@@ -292,17 +281,6 @@ class SO:
             ppl = SO.modify_plot(ppl, *modifiers)
             #publish plot on subfigure-uses default plot theme overriding rc subplot parameters
             ppl.on(sub_figure_).plot()
-
-    @staticmethod
-    def multi_histogram(data, features, sub_figures, **kwargs):
-        """_summary_ TODO
-
-        Args:
-            data (_type_): _description_
-            features (_type_): _description_
-            sub_figures (_type_): _description_
-        """
-        pass
 
     @staticmethod
     def multi_outlier_box(data, features, sub_figures, **kwargs):
