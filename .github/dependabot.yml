@@ -1,0 +1,23 @@
+version: 2
+
+updates:
+  # The root manifest is pyproject.toml (PEP 621). Only exact pins move here:
+  # a dependency with no constraint is already satisfied by every release, so
+  # the one entry this watches is ruff, pinned in the dev extra on purpose.
+  - package-ecosystem: pip
+    directory: /
+    schedule:
+      interval: weekly
+
+  # The example pins its whole stack, which is what a reader installs. This is
+  # where a pin that no longer fits the supported pythons shows up.
+  - package-ecosystem: pip
+    directory: /examples/compare-plot
+    schedule:
+      interval: weekly
+
+  # The workflow's checkout and setup-python actions age too.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
