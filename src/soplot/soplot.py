@@ -1,7 +1,9 @@
+import numpy as np
 import seaborn.objects as so
-from argin import AkwArgs, KwArgs, Args, is_type,is_instance,nested_by, arg_initializer
-from  logerr import conditional_validation,Err
-from matstat import *
+
+from soplot._errors import FigureModifyError, UnexpectedTypeError
+from soplot._stats import Agg
+from soplot._types import AkwArgs, Args, KwArgs, arg_initializer
 
 """
 Seaborn Objects Api Objects
@@ -48,7 +50,15 @@ class MDF:
 
     """
 
-    class Scale(KwArgs):
+    class Modifier:
+        """Base of every modifier below.
+
+        Membership used to be decided by a substring match on the class
+        qualname, which any class with ``MDF`` in its name passed. Inheriting a
+        marker makes the check exact and cheap: ``isinstance(mdf, MDF.Modifier)``.
+        """
+
+    class Scale(Modifier, KwArgs):
         """
 
         Specify mappings from data units to visual properties.
@@ -61,7 +71,7 @@ class MDF:
         """
         ...
 
-    class Facet(KwArgs):
+    class Facet(Modifier, KwArgs):
         """Produce subplots with conditional subsets of the data.
 
         ex:
@@ -73,7 +83,7 @@ class MDF:
         """
         ...
 
-    class Pair(KwArgs):
+    class Pair(Modifier, KwArgs):
         """
 
         Produce subplots by pairing multiple x and/or y variables.
@@ -87,7 +97,7 @@ class MDF:
         """
         ...
 
-    class Layout(KwArgs):
+    class Layout(Modifier, KwArgs):
         """Control the figure size and layout.
 
         ex:
@@ -98,7 +108,7 @@ class MDF:
         """
         ...
 
-    class Label(KwArgs):
+    class Label(Modifier, KwArgs):
         """ Controls the labels and titles for axes, legends, and subplots.
 
         ex:
@@ -108,7 +118,7 @@ class MDF:
             (*, title=None, legend=None, **variables): https://seaborn.pydata.org/generated/seaborn.objects.Plot.label.html
         """
 
-    class Limit(KwArgs):
+    class Limit(Modifier, KwArgs):
         """Control the range of visible data.
 
 
@@ -120,7 +130,7 @@ class MDF:
         """
         ...
 
-    class Share(KwArgs):
+    class Share(Modifier, KwArgs):
         """Control sharing of axis limits and ticks across subplots.
 
         ex:
@@ -131,7 +141,7 @@ class MDF:
         """
         ...
 
-    class Theme(Args):
+    class Theme(Modifier, Args):
         """Control the appearance of elements in the plot.
 
         ex: Arg of dicts
@@ -178,25 +188,30 @@ class SO:
             _type_: _description_
         """
 
-        any_foreign_type = not all(nested_by(f, MDF) for f in modifiers)
-        conditional_validation(any_foreign_type, Err.UnexpectedTypeError('Expected a MDF object'))
+        # An empty container carries no setting, and the builders below pass one
+        # (``KwArgs()``) as their "no modifier here" placeholder, so only a
+        # non-empty object of a foreign type is an error.
+        foreign = [type(mdf).__name__ for mdf in modifiers
+                   if mdf and not isinstance(mdf, MDF.Modifier)]
+        if foreign:
+            raise UnexpectedTypeError('Expected an MDF modifier', received=foreign)
 
         for mdf in modifiers:
-            if is_type(mdf, MDF.Scale):
+            if isinstance(mdf, MDF.Scale):
                 plot = plot.scale(**mdf)
-            elif is_type(mdf, MDF.Facet):
+            elif isinstance(mdf, MDF.Facet):
                 plot = plot.facet(**mdf)
-            elif is_type(mdf, MDF.Pair):
+            elif isinstance(mdf, MDF.Pair):
                 plot = plot.pair(**mdf)
-            elif is_type(mdf, MDF.Layout):
+            elif isinstance(mdf, MDF.Layout):
                 plot = plot.layout(**mdf)
-            elif is_type(mdf, MDF.Label):
+            elif isinstance(mdf, MDF.Label):
                 plot = plot.label(**mdf)
-            elif is_type(mdf, MDF.Limit):
+            elif isinstance(mdf, MDF.Limit):
                 plot = plot.limit(**mdf)
-            elif is_type(mdf, MDF.Share):
+            elif isinstance(mdf, MDF.Share):
                 plot = plot.share(**mdf)
-            elif is_type(mdf, MDF.Theme):
+            elif isinstance(mdf, MDF.Theme):
                 if mdf:  # apply only if not empty
                     for m in mdf:
                         plot = plot.theme(m)
@@ -260,7 +275,7 @@ class SO:
         #modifies all plots with seaborn.object modifiers
         global_modifiers = kw_args['global_modifiers']
         #make sure subfigures are iterable
-        sub_figures = sub_figures.flatten() if hasattr(sub_figures, 'flatten') else sub_figures if is_instance(sub_figures, np.ndarray) else [sub_figures]
+        sub_figures = sub_figures.flatten() if hasattr(sub_figures, 'flatten') else sub_figures if isinstance(sub_figures, np.ndarray) else [sub_figures]
         for idx_, (feature_, sub_figure_) in enumerate(zip(features, sub_figures)):
             #set axis for each feature plot
             kw_args['plot_param'].kwargs[kw_args['axis']] = variable
@@ -329,7 +344,7 @@ class SO:
         kw_args['modifiers'] = arg_initializer(kw_args['modifiers'], Args(), features_length)
         kw_args['show_hist'] = arg_initializer(kw_args['show_hist'], False, features_length)
 
-        sub_figures = sub_figures.flatten() if hasattr(sub_figures, 'flatten') else sub_figures if is_instance(sub_figures,
+        sub_figures = sub_figures.flatten() if hasattr(sub_figures, 'flatten') else sub_figures if isinstance(sub_figures,
                                                                                                                 np.ndarray) else [
             sub_figures]
         for idx_, (feature_, sub_figure) in enumerate(zip(features, sub_figures)):
@@ -498,8 +513,9 @@ def add_barlabel(figure):
             for j , cont in enumerate(ax0_containers):
                 ax0.bar_label(cont)
         return figure
-    except Exception as e:
-        conditional_validation(True,
-                               Err.FigureModifyError('Barlabel could not be added to the figure',throw=True, log=True).adorn(hint= 'Mark object must be Bar() instead of Bars()'),
-                               e)
+    except Exception as exc:
+        raise FigureModifyError(
+            'Barlabel could not be added to the figure',
+            hint='Mark object must be Bar() instead of Bars()',
+        ) from exc
      
