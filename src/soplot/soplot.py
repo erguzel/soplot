@@ -419,7 +419,7 @@ class SO:
 
         hst = so.Plot(*kw_args['plot_param'].args, **kw_args['plot_param'].kwargs) \
             .add(*kw_args['hist_layer'].args, **kw_args['hist_layer'].kwargs)
-        if kw_args['kde_layer'] is None:
+        if kw_args['kde_layer'] is not None:
             hst = hst.add(*kw_args['kde_layer'].args, **kw_args['kde_layer'].kwargs)
 
         hst = SO.modify_plot(hst, *kw_args['modifiers'])
