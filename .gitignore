@@ -144,6 +144,8 @@ celerybeat.pid
 # Environments
 .env
 .venv
+#   environment.yml creates its env here
+.convenv/
 env/
 venv/
 .conenv/
