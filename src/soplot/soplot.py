@@ -293,7 +293,9 @@ class SO:
         global_modifiers = kw_args['global_modifiers']
         #make sure subfigures are iterable
         sub_figures = _as_sequence(sub_figures)
-        for idx_, (feature_, sub_figure_) in enumerate(zip(features, sub_figures)):
+        for idx_, (feature_, sub_figure_) in enumerate(
+            zip(features, sub_figures, strict=True)
+        ):
             #set axis for each feature plot
             kw_args['plot_param'].kwargs[kw_args['axis']] = variable
             kw_args['plot_param'].kwargs[kw_args['other_axis']] = feature_
@@ -358,7 +360,9 @@ class SO:
         kw_args['show_hist'] = arg_initializer(kw_args['show_hist'], False, features_length)
 
         sub_figures = _as_sequence(sub_figures)
-        for idx_, (feature_, sub_figure) in enumerate(zip(features, sub_figures)):
+        for idx_, (feature_, sub_figure) in enumerate(
+            zip(features, sub_figures, strict=True)
+        ):
             his_fig = None
             box_fig = None
             his_theme = MDF.Theme()
