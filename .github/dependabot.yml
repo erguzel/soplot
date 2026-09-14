@@ -15,6 +15,12 @@ updates:
     directory: /examples/compare-plot
     schedule:
       interval: weekly
+    ignore:
+      # numpy 2.5 raised its floor to python 3.12, and the example has to
+      # install on 3.11, which is what pyproject.toml declares. Dependabot
+      # proposed 2.5.3 anyway. Drop this entry when the floor moves to 3.12.
+      - dependency-name: numpy
+        versions: ['>=2.5']
 
   # The workflow's checkout and setup-python actions age too.
   - package-ecosystem: github-actions
