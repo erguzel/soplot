@@ -258,6 +258,45 @@ def test_a_missing_layer_is_skipped(frame):
 
 
 # --------------------------------------------------------------------------
+# feature / subfigure pairing
+# --------------------------------------------------------------------------
+
+def test_compare_plot_refuses_fewer_subfigures_than_features(frame):
+    # Zipping used to stop at the shorter side: the third plot was dropped in
+    # silence. Losing a plot without a word is worse than failing.
+    figure = plt.figure()
+    with pytest.raises(ValueError):
+        SO.compare_plot(
+            data=frame,
+            variable="tame",
+            features=["spiky", "tame", "group"],
+            sub_figures=figure.subfigures(1, 2),
+            layers=Args(Args(SoLayer(so.Dot()))),
+        )
+    plt.close(figure)
+
+
+def test_multi_outlier_box_refuses_fewer_subfigures_than_features(frame):
+    figure = plt.figure()
+    with pytest.raises(ValueError):
+        SO.multi_outlier_box(
+            data=frame,
+            features=["spiky", "tame", "spiky"],
+            sub_figures=figure.subfigures(1, 2),
+        )
+    plt.close(figure)
+
+
+def test_matching_counts_are_drawn(frame):
+    figure = plt.figure()
+    SO.multi_outlier_box(
+        data=frame, features=["spiky", "tame"], sub_figures=figure.subfigures(1, 2)
+    )
+    assert all(subfigure.axes for subfigure in figure.subfigs)
+    plt.close(figure)
+
+
+# --------------------------------------------------------------------------
 # add_barlabel
 # --------------------------------------------------------------------------
 
