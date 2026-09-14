@@ -2,7 +2,7 @@
 # same one. Install from this directory:
 #     python -m pip install -r requirements.txt
 matplotlib==3.11.2
-numpy==2.4.6
+numpy==2.5.3
 pandas==3.0.5
 seaborn==0.13.2
 # soplot itself, from the repo root, installed in place: the version never
