@@ -1,0 +1,12 @@
+# The stack this example was last checked against, pinned so a reader gets the
+# same one. Install from this directory:
+#     python -m pip install -r requirements.txt
+matplotlib==3.11.2
+numpy==2.4.6
+pandas==3.0.5
+seaborn==0.13.2
+# soplot itself, from the repo root, installed in place: the version never
+# changes, so a plain install would be skipped as satisfied and leave a stale
+# copy behind. pip resolves this relative path against the working directory,
+# not against this file, which is the other reason to install from here.
+-e ../..
