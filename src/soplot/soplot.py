@@ -163,14 +163,15 @@ Custom plots with so.Plot() api
 class SO:
     @staticmethod
     def add_layers(plot: so.Plot, *layers: SoLayer):
-        """
-        Adds given layers to the given plot
+        """Add each layer to ``plot``, in the order given.
+
         Args:
-            plot:
-            *layers:
+            plot: The plot to add to.
+            *layers: Layers to add. A falsy layer -- ``None``, say -- is skipped.
 
         Returns:
-
+            A new plot carrying the layers. ``so.Plot`` is immutable, so the
+            argument is left untouched.
         """
         for lyr in layers:
             if lyr:
@@ -179,13 +180,23 @@ class SO:
 
     @staticmethod
     def modify_plot(plot: so.Plot, *modifiers: MDF):
-        """_summary_
+        """Apply each modifier to ``plot`` according to its type.
+
+        ``MDF.Scale`` becomes ``plot.scale(...)``, ``MDF.Facet`` becomes
+        ``plot.facet(...)``, and so on; an ``MDF.Theme`` is applied entry by
+        entry. An empty modifier is a no-op, which is how the builders below
+        say "nothing to apply here".
 
         Args:
-            plot (so.Plot): _description_
+            plot: The plot to modify.
+            *modifiers: ``MDF`` modifiers.
 
         Returns:
-            _type_: _description_
+            A new plot carrying the modifiers. ``so.Plot`` is immutable, so the
+            argument is left untouched.
+
+        Raises:
+            UnexpectedTypeError: A non-empty modifier is not an ``MDF`` type.
         """
 
         # An empty container carries no setting, and the builders below pass one
@@ -220,20 +231,29 @@ class SO:
 
     @staticmethod
     def compare_plot(data, variable, features, sub_figures, **kwargs):
-        """_summary_
+        """Plot ``variable`` against each feature, one feature per subfigure.
+
+        Each subplot shares ``variable`` on the base axis and carries one
+        feature on the other, so the subfigures read as one comparison. Nothing
+        is returned: every plot is drawn onto the subfigure it was given.
 
         Args:
-            data (_type_): _description_
-            variable (_type_): _description_
-            features (_type_): _description_
-            sub_figures (_type_): _description_
+            data: The data frame every subplot reads from.
+            variable: The column held constant on the base axis.
+            features: One column per subplot, matched with ``sub_figures``.
+            sub_figures: Matplotlib subfigures, an array or a single one.
 
             **kwargs:
-                layers = Args( Args( SoLayer() ) ): _description_
-                modifiers = Args( Args( MDF ) ): _description_
-                global_modifiers = Args( MDF ): _description_
-                plots_vars = Args(KwArgs())
-                base = 'x'
+                layers: ``Args`` of ``Args`` of ``SoLayer``, one entry per
+                    feature; the last entry repeats once the entries run out.
+                    Each ``SoLayer`` needs a real mark -- an empty one cannot be
+                    added to a plot.
+                modifiers: ``Args`` of ``Args`` of ``MDF``, one entry per
+                    feature, applied after the global ones.
+                global_modifiers: ``MDF`` modifiers applied to every subplot.
+                plot_vars: ``Args`` of ``KwArgs``, extra plot variables
+                    (``color``, ``marker``, ...) injected per feature.
+                base: ``'x'`` or ``'y'`` -- which axis ``variable`` sits on.
         """
         #default parameters
         kw_args = KwArgs(layers=Args(Args(SoLayer())), 
@@ -284,20 +304,27 @@ class SO:
 
     @staticmethod
     def multi_outlier_box(data, features, sub_figures, **kwargs):
-        """_summary_
+        """Draw one outlier box per feature, optionally paired with a histogram.
+
+        With ``show_hist`` the subfigure is split in two: on ``axis='x'`` the
+        histogram sits above the box, otherwise beside it, with its tick labels
+        switched off so the pair reads as one panel. Nothing is returned;
+        everything is drawn onto the subfigures given.
 
         Args:
-            data (_type_): _description_
-            features (_type_): _description_
-            sub_figures (_type_): _description_
+            data: The data frame every subplot reads from.
+            features: One column per subplot, matched with ``sub_figures``.
+            sub_figures: Matplotlib subfigures, an array or a single one.
 
-            kw_args = KwArgs(
-                axis = 'x'
-                box_vars = Args(KwArgs()) : _description_
-                hist_vars = Args(KwArgs()): _description_
-                modifiers = Args(Args()) : _description_
-                show_hist = Args(False) : _description_
-            )
+            **kwargs:
+                axis: ``'x'`` or ``'y'`` -- which axis the feature sits on.
+                box_vars: ``Args`` of ``KwArgs``, arguments forwarded to
+                    :meth:`outlier_box` per feature.
+                hist_vars: ``Args`` of ``KwArgs``, arguments forwarded to
+                    :meth:`histogram` per feature.
+                modifiers: ``Args`` of ``Args`` of ``MDF``, applied to both the
+                    histogram and the box of that feature.
+                show_hist: ``Args`` of booleans, one per feature.
         """
 
         kw_args = KwArgs(
@@ -368,19 +395,19 @@ class SO:
 
     @staticmethod
     def histogram(data, feature, **kwargs):
-        """_summary_
+        """Build a histogram of ``feature``, with a KDE curve over it.
 
         Args:
-            data (_type_): _description_
-            feature (_type_): _description_
-            **kwargs
-                axis = 'x',
-                hist_layer = So.Layer(so.Bars(),so.Hist('proportion')),
-                kde_layer = So.Layer(so.Area(),so.KDE()),
-                modifiers = Args()
+            data: The data frame to read from.
+            feature: The column to count.
+            **kwargs:
+                axis: ``'x'`` or ``'y'`` -- which axis the feature sits on.
+                hist_layer: The counting layer. Defaults to proportion bars.
+                kde_layer: The density layer, or ``None`` for bars alone.
+                modifiers: ``Args`` of ``MDF`` applied to the finished plot.
 
         Returns:
-            _type_: _description_
+            An ``so.Plot``. It is not drawn yet -- call ``.on(...).plot()``.
         """
         kw_args = KwArgs(
             axis='x',
@@ -406,7 +433,13 @@ class SO:
 
     @staticmethod
     def outlier_box(data, feature, **kwargs):
-        """_summary_
+        """Build a box-like summary of ``feature``: the sample and its bounds.
+
+        The plot carries the observations themselves plus five reference marks:
+        the interquartile range, the two whisker bounds
+        (:class:`soplot._stats.Agg`), the mean and the median. The feature is
+        laid out against a constant dummy column, which is what gives the marks
+        a single row to sit on.
 
         Args:
             data (pd.DataFrame): data frame
@@ -427,7 +460,8 @@ class SO:
                 band_view = False,
                 modifiers = Args()
 
-                
+        Returns:
+            An ``so.Plot``. It is not drawn yet -- call ``.on(...).plot()``.
         """
         kw_args = KwArgs(
             axis='x',
@@ -474,14 +508,23 @@ class SO:
 
 
 def add_barlabel(figure):
-    """
-    This function adds bar labels to a barplot.
-    designed for plots created with seaborn objects api interface
-    make sure that the used Mark object is Bar() instead of Bars() 
-    Parameters
+    """Label every bar of a drawn figure with its value.
 
-    plotobject : barplot
-    numberoflayers : int
+    Takes the matplotlib figure, not the seaborn plotter: draw first with
+    ``so.Plot(...).on(fig).plot(pyplot=True)``, then pass ``fig``.
+
+    The mark has to be ``so.Bar()``. ``so.Bars()`` leaves matplotlib no bar
+    containers to read, so nothing is labelled -- and nothing is raised either.
+
+    Args:
+        figure: A matplotlib figure that has already been drawn on.
+
+    Returns:
+        The same figure, with a label on every bar.
+
+    Raises:
+        FigureModifyError: The figure could not be read or labelled. The
+            original error is kept as the cause.
     """
     try:
         axes = figure.figure.axes
