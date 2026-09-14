@@ -2,13 +2,11 @@ name: soplot
 channels:
   - defaults
 dependencies:
+  # the floor declared in pyproject.toml: a local env reproduces the CI job
+  # most likely to break on a dependency that raised its own floor
   - python=3.11
   - pip
   - pip:
-    - ../baseargs
-    - ../logerr
-    - ../matstat
-    - seaborn
-    - pytest
-    - pytest-html
+    # pins live in pyproject.toml; conda files are not read by dependabot
+    - -e .[dev]
 prefix: ./.convenv
