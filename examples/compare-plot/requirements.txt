@@ -5,7 +5,7 @@ matplotlib==3.11.2
 # 2.5.x requires python 3.12; this is the newest release that fits the
 # supported floor of 3.11
 numpy==2.4.6
-pandas==3.0.5
+pandas==3.0.6
 seaborn==0.13.2
 # soplot itself, from the repo root, installed in place: the version never
 # changes, so a plain install would be skipped as satisfied and leave a stale
